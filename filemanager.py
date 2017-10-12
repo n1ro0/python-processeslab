@@ -1,7 +1,7 @@
 from os import walk, makedirs, remove
 from os.path import join, isfile, exists, basename,abspath
 import glob, shutil, argparse
-from multiprocessing import Process, Semaphore
+from multiprocessing import Process, Semaphore, cpu_count
 
 
 def async_copy(sourcepath, distpath, semaphore):
@@ -31,33 +31,35 @@ def copy_to_folder(sourcepath, distpath, semaphore):
         process.join()
 
 
-def copy(sourcepath, distpath, processes=1):
-    sp = Semaphore(processes)
-    if sourcepath.count("*") == 0:
-        copy_to_folder(sourcepath, distpath, sp)
-    else:
-        paths = glob.glob(sourcepath)
-        for path in paths:
-            copy_to_folder(path, distpath, sp)
+def copy(sourcepaths, distpath, processes=1):
+    for sourcepath in sourcepaths:
+        sp = Semaphore(processes)
+        if sourcepath.count("*") == 0:
+            copy_to_folder(sourcepath, distpath, sp)
+        else:
+            paths = glob.glob(sourcepath)
+            for path in paths:
+                copy_to_folder(path, distpath, sp)
     print("DONE")
 
 
-def move(sourcepath, distpath, processes=1):
-    sp = Semaphore(processes)
-    if sourcepath.count("*") == 0:
-        copy_to_folder(sourcepath, distpath, sp)
-        if isfile(sourcepath):
-            remove(sourcepath)
-        else:
-            shutil.rmtree(sourcepath)
-    else:
-        paths = glob.glob(sourcepath)
-        for path in paths:
-            copy_to_folder(path, distpath, sp)
-            if isfile(path):
-                remove(path)
+def move(sourcepaths, distpath, processes=1):
+    for sourcepath in sourcepaths:
+        sp = Semaphore(processes)
+        if sourcepath.count("*") == 0:
+            copy_to_folder(sourcepath, distpath, sp)
+            if isfile(sourcepath):
+                remove(sourcepath)
             else:
-                shutil.rmtree(path)
+                shutil.rmtree(sourcepath)
+        else:
+            paths = glob.glob(sourcepath)
+            for path in paths:
+                copy_to_folder(path, distpath, sp)
+                if isfile(path):
+                    remove(path)
+                else:
+                    shutil.rmtree(path)
     print("DONE")
 
 
@@ -67,7 +69,7 @@ operation = {"copy": copy,
 def main():
     file_parser = argparse.ArgumentParser(description="File manager parser")
     file_parser.add_argument('--operation', type=str, choices=["move", "copy"], default="copy")
-    file_parser.add_argument('--from', type=str, default=abspath(".\copytest"))
+    file_parser.add_argument('--from', type=str, nargs="+", default=[abspath(".\copytest")])
     file_parser.add_argument('--to', type=str, default=abspath(".\distcopytest"))
     file_parser.add_argument('--threads', type=int, default=1)
     output = vars(file_parser.parse_args())
