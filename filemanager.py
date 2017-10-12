@@ -71,7 +71,7 @@ def main():
     file_parser.add_argument('--operation', type=str, choices=["move", "copy"], default="copy")
     file_parser.add_argument('--from', type=str, nargs="+", default=[abspath("./copytest")])
     file_parser.add_argument('--to', type=str, default=abspath(".\distcopytest"))
-    file_parser.add_argument('--threads', type=int, default=1)
+    file_parser.add_argument('--threads', type=int, default=cpu_count())
     output = vars(file_parser.parse_args())
     operation[output["operation"]](output["from"], output["to"], output["threads"])
 
