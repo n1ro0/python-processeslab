@@ -32,8 +32,8 @@ def copy_to_folder(sourcepath, distpath, semaphore):
 
 
 def copy(sourcepaths, distpath, processes=1):
+    sp = Semaphore(processes)
     for sourcepath in sourcepaths:
-        sp = Semaphore(processes)
         if sourcepath.count("*") == 0:
             copy_to_folder(sourcepath, distpath, sp)
         else:
@@ -44,8 +44,8 @@ def copy(sourcepaths, distpath, processes=1):
 
 
 def move(sourcepaths, distpath, processes=1):
+    sp = Semaphore(processes)
     for sourcepath in sourcepaths:
-        sp = Semaphore(processes)
         if sourcepath.count("*") == 0:
             copy_to_folder(sourcepath, distpath, sp)
             if isfile(sourcepath):
@@ -69,7 +69,7 @@ operation = {"copy": copy,
 def main():
     file_parser = argparse.ArgumentParser(description="File manager parser")
     file_parser.add_argument('--operation', type=str, choices=["move", "copy"], default="copy")
-    file_parser.add_argument('--from', type=str, nargs="+", default=[abspath(".\copytest")])
+    file_parser.add_argument('--from', type=str, nargs="+", default=[abspath("./copytest")])
     file_parser.add_argument('--to', type=str, default=abspath(".\distcopytest"))
     file_parser.add_argument('--threads', type=int, default=1)
     output = vars(file_parser.parse_args())
